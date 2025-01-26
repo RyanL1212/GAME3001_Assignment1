@@ -10,7 +10,6 @@ public class SeekingBehaviour : MonoBehaviour
     // This bool I used to set in the SpawnEntities() function. It is mainly used in the update method to check if the SpawnEntities() function has been called.
     bool hasEntitiesSpawned = false;
     float speed = 5f;
-    Rigidbody rb;
 
     void Update()
     {
@@ -18,6 +17,7 @@ public class SeekingBehaviour : MonoBehaviour
         {
             Destroy(spawnedTarget);
             Destroy(spawnedCharacter);
+            hasEntitiesSpawned = false;
         }
         else if (Input.GetKeyDown(KeyCode.Alpha1))
         {
@@ -29,11 +29,8 @@ public class SeekingBehaviour : MonoBehaviour
             }
             SpawnEntities();
         }
-    }
 
-    void FixedUpdate()
-    {
-        if (hasEntitiesSpawned && rb != null)
+        if (hasEntitiesSpawned)
         {
             MoveCharacterTowardsTarget();
         }
@@ -41,9 +38,11 @@ public class SeekingBehaviour : MonoBehaviour
 
     void MoveCharacterTowardsTarget()
     {
-        Vector3 directionToTarget = (spawnedTarget.transform.position - spawnedCharacter.transform.position).normalized;
-        Vector3 moveToTarget = spawnedCharacter.transform.position + directionToTarget * speed * Time.deltaTime;
-        rb.MovePosition(moveToTarget);
+        if (spawnedCharacter != null && spawnedTarget != null)
+        {
+            Vector3 directionToTarget = (spawnedTarget.transform.position - spawnedCharacter.transform.position).normalized;
+            spawnedCharacter.transform.position += directionToTarget * speed * Time.deltaTime;
+        }
     }
 
     void SpawnEntities()
@@ -60,11 +59,8 @@ public class SeekingBehaviour : MonoBehaviour
 
         // All directionToTarget does is calculates the direction to the target by subtracting the characters position from the targets position
         Vector3 directionToTarget = (spawnedTarget.gameObject.transform.position - spawnedCharacter.gameObject.transform.position).normalized;
-        Quaternion rotationToTarget = Quaternion.FromToRotation(new Vector3(0, 0, 1), directionToTarget);
+        Quaternion rotationToTarget = Quaternion.LookRotation(directionToTarget);
         spawnedCharacter.transform.rotation = rotationToTarget;
-
-        // Gets the rigidbody of the spawned character (not the prefab)
-        rb = spawnedCharacter.GetComponent<Rigidbody>();
 
         hasEntitiesSpawned = true;
     }
