@@ -2,30 +2,43 @@ using UnityEngine;
 
 public class SeekingBehaviour : MonoBehaviour
 {
-    [SerializeField] GameObject character; // Character prefab
-    [SerializeField] GameObject target; // Target prefab
+    [SerializeField] GameObject characterPrefab; // Character prefab
+    [SerializeField] GameObject targetPrefab; // Target prefab
     GameObject spawnedCharacter; // Reference to the spawned character
     GameObject spawnedTarget; // Reference to the spawned target
 
-    // This bool I used to set in the SpawnEntities() function. It is mainly used in the update method to check if the SpawnEntities() function has been called.
-    bool hasEntitiesSpawned = false;
+    public bool hasEntitiesSpawned = false;
     float speed = 5f;
+
+    [SerializeField] ArrivalBehaviour arrivalBehaviour;
+    [SerializeField] FleeingBehaviour fleeingBehaviour;
+    [SerializeField] AvoidanceBehaviour avoidanceBehaviour;
 
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Alpha0))
         {
-            Destroy(spawnedTarget);
-            Destroy(spawnedCharacter);
-            hasEntitiesSpawned = false;
+            DestroyEntities();
         }
         else if (Input.GetKeyDown(KeyCode.Alpha1))
         {
+            // Destroy entities from other scripts if they are already spawned in
+            if (arrivalBehaviour.hasEntitiesSpawned)
+            {
+                arrivalBehaviour.DestroyEntities();
+            }
+            else if (fleeingBehaviour.hasEntitiesSpawned)
+            {
+                fleeingBehaviour.DestroyEntities();
+            }
+            else if (avoidanceBehaviour.hasEntitiesSpawned)
+            {
+                avoidanceBehaviour.DestroyEntities();
+            }
+
             if (hasEntitiesSpawned == true)
             {
-                Destroy(spawnedTarget);
-                Destroy(spawnedCharacter);
-                hasEntitiesSpawned = false;
+                DestroyEntities();
             }
             SpawnEntities();
         }
@@ -47,15 +60,15 @@ public class SeekingBehaviour : MonoBehaviour
 
     void SpawnEntities()
     {
-        // Use our GetRandomPointInViewport function and store it in a Vector3 for both our player and our target - This is so they both have different spawn locations
+        // Use the GetRandomPointInViewport function and store it in a Vector3 for both our player and our target - This is so they both have different spawn locations
         Vector3 randomPointInViewportCharacter = GetRandomPointInViewport();
         Vector3 randomPointInViewportTarget = GetRandomPointInViewport();
 
         // When this function is called (when 1 is pressed) spawn a copy of the target at the given coordinates
-        spawnedTarget = Instantiate(target, randomPointInViewportTarget, Quaternion.identity);
+        spawnedTarget = Instantiate(targetPrefab, randomPointInViewportTarget, Quaternion.identity);
 
         // When this function is called (when 1 is pressed) spawn a copy of the character at the given coordinates
-        spawnedCharacter = Instantiate(character, randomPointInViewportCharacter, Quaternion.identity);
+        spawnedCharacter = Instantiate(characterPrefab, randomPointInViewportCharacter, Quaternion.identity);
 
         // All directionToTarget does is calculates the direction to the target by subtracting the characters position from the targets position
         Vector3 directionToTarget = (spawnedTarget.gameObject.transform.position - spawnedCharacter.gameObject.transform.position).normalized;
@@ -77,5 +90,18 @@ public class SeekingBehaviour : MonoBehaviour
         worldPoint.y = 1f;
 
         return worldPoint;
+    }
+
+    public void DestroyEntities()
+    {
+        if (spawnedCharacter != null)
+        {
+            Destroy(spawnedCharacter);
+        }
+        if (spawnedTarget != null)
+        {
+            Destroy(spawnedTarget);
+        }
+        hasEntitiesSpawned = false;
     }
 }
